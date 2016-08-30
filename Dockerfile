@@ -3,9 +3,10 @@ FROM ubuntu:14.04.4
 
 ENV DERBY_INSTALL=/db-derby-10.12.1.1-bin
 ENV DERBY_HOME=/db-derby-10.12.1.1-bin
-ENV CLASSPATH=/$DERBY_INSTALL/lib/derby.jar:$DERBY_INSTALL/lib/derbytools.jar:.
+ENV CLASSPATH=/$DERBY_INSTALL/lib/derbynet.jar:/$DERBY_INSTALL/lib/derby.jar:$DERBY_INSTALL/lib/derbytools.jar:.
 
 COPY webgui/ /webgui/
+COPY init.sql /dbs/
 
 RUN \
 	apt-get update &&\
@@ -43,8 +44,10 @@ RUN \
 	echo "command=/usr/bin/node /webgui/index.js" >> /etc/supervisor.conf &&\
 	echo "stopwaitsecs=30" >> /etc/supervisor.conf &&\
 	echo "stopsignal=KILL" >> /etc/supervisor.conf &&\
-	echo "killasgroup=true" >> /etc/supervisor.conf
+	echo "killasgroup=true" >> /etc/supervisor.conf &&\
+	echo "command=/bin/bash -c \"cd /db-derby-10.12.1.1-bin/bin && ./ij /dbs/init.sql || true\"" >> /etc/supervisor.conf
+
 
 VOLUME ["/dbs"]
-EXPOSE 5000 1527
+EXPOSE 1527
 CMD supervisord -c /etc/supervisor.conf
